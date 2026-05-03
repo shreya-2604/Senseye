@@ -285,6 +285,7 @@ function App() {
   const [showModel, setShowModel] = useState(false);
   const [activeSection, setActiveSection] = useState('main');
   const [isPageReady, setIsPageReady] = useState(false);
+  const heroVideoRef = useRef(null);
 
   // Intro animation: reveal model shortly after page is ready
   useEffect(() => {
@@ -297,21 +298,45 @@ function App() {
 
       useEffect(() => {
         const preloadAssets = async () => {
-          const assetUrls = ['/bg-vid.mp4', '/bg.jpg', '/problem.png'];
+          const assetUrls = ['/senseye_bg.mp4', '/bg.jpg', '/problem.png'];
 
           await Promise.all([
             document.fonts?.ready ?? Promise.resolve(),
             ...assetUrls.map((url) => {
               if (url.endsWith('.mp4')) {
-                return new Promise((resolve) => {
-                  const video = document.createElement('video');
-                  video.preload = 'auto';
-                  video.muted = true;
-                  video.src = url;
-                  video.onloadeddata = () => resolve();
-                  video.onerror = () => resolve();
-                });
-              }
+                  return new Promise((resolve) => {
+                    const video = document.createElement('video');
+                    // Only fetch metadata to avoid downloading the full file during preload
+                    video.preload = 'metadata';
+                    video.muted = true;
+                    video.src = url;
+
+                    const onLoaded = () => {
+                      cleanup();
+                      resolve();
+                    };
+
+                    const onError = () => {
+                      cleanup();
+                      resolve();
+                    };
+
+                    // Fallback in case network stalls — don't block forever
+                    const timeout = setTimeout(() => {
+                      cleanup();
+                      resolve();
+                    }, 5000);
+
+                    function cleanup() {
+                      clearTimeout(timeout);
+                      video.removeEventListener('loadedmetadata', onLoaded);
+                      video.removeEventListener('error', onError);
+                    }
+
+                    video.addEventListener('loadedmetadata', onLoaded);
+                    video.addEventListener('error', onError);
+                  });
+                }
 
               return new Promise((resolve) => {
                 const image = new Image();
@@ -380,6 +405,45 @@ function App() {
     document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' });
   };
 
+  // Ensure hero video begins playback and keeps looping reliably
+  useEffect(() => {
+    const video = heroVideoRef.current;
+    if (!video) return undefined;
+
+    const tryPlay = async () => {
+      try {
+        // Some browsers require play() to be initiated after metadata/load
+        await video.play();
+      } catch (e) {
+        // Ignore; autoplay may be blocked until user interaction
+      }
+    };
+
+    const onLoadedMetadata = () => {
+      // Attempt play after metadata is available
+      tryPlay();
+    };
+
+    const onEnded = () => {
+      // Fallback loop: reset time and play
+      try {
+        video.currentTime = 0;
+        video.play().catch(() => {});
+      } catch (e) {}
+    };
+
+    video.addEventListener('loadedmetadata', onLoadedMetadata);
+    video.addEventListener('ended', onEnded);
+
+    // If page is already ready, try to play immediately (muted autoplay should work)
+    if (isPageReady) tryPlay();
+
+    return () => {
+      video.removeEventListener('loadedmetadata', onLoadedMetadata);
+      video.removeEventListener('ended', onEnded);
+    };
+  }, [isPageReady]);
+
   return (
     <div className="app-container">
       {!isPageReady && <div className="page-loader" aria-live="polite">Loading SENSEYE...</div>}
@@ -399,14 +463,17 @@ function App() {
       {/* HERO SECTION */}
       <section id="main" className={`hero-section ${isPageReady ? 'is-ready' : 'is-loading'}`}>
         {/* Background Video */}
-        <video 
-          className="hero-video" 
-          autoPlay 
-          loop 
-          muted 
+        <video
+          ref={heroVideoRef}
+          className="hero-video"
+          autoPlay
+          loop
+          muted
           playsInline
+          preload="metadata"
+          poster="/bg.jpg"
         >
-          <source src="/bg-vid.mp4" type="video/mp4" />
+          <source src="/senseye_bg.mp4" type="video/mp4" />
           Your browser does not support the video tag.
         </video>
 
