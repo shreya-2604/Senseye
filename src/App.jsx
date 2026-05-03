@@ -1,7 +1,8 @@
-import React, { Suspense, useState, useEffect, useMemo } from 'react';
-import { Canvas, useThree } from '@react-three/fiber';
+import React, { Suspense, useState, useEffect, useMemo, useRef } from 'react';
+import { Canvas, useThree, useFrame } from '@react-three/fiber';
 import { OrbitControls, useGLTF, Stage } from '@react-three/drei';
 import { motion } from 'framer-motion';
+import testimonialVideo from './assets/senseye_review.mp4';
 import './index.css';
 
 function ShoeModel() {
@@ -67,7 +68,26 @@ function CustomControls() {
   );
 }
 
-const SECTIONS = ['main', 'problem-statement', 'solution', 'features'];
+// Hook to keep canvas invalidating for smooth rotation even with frameloop="demand"
+function KeepCanvasAlive() {
+  const invalidate = useThree((state) => state.invalidate);
+  useFrame(() => {
+    invalidate();
+  });
+  return null;
+}
+
+const SECTIONS = ['main', 'pricing', 'specs', 'problem-statement', 'solution', 'features', 'testimonial'];
+
+const NAV_LABELS = {
+  main: 'Home',
+  pricing: 'Pricing',
+  specs: 'Specifications',
+  'problem-statement': 'Problem statement',
+  solution: 'Solution',
+  features: 'Key Features',
+  testimonial: 'Testimonial',
+};
 
 const FEATURE_CARDS = [
   {
@@ -79,14 +99,187 @@ const FEATURE_CARDS = [
     description: 'A wearable architecture that keeps the user unencumbered while adapting to daily routines.',
   },
   {
-    title: 'Real-time processing',
+    title: 'Real-time Processing',
     description: 'Processes environmental data instantly so guidance stays responsive as conditions change.',
   },
   {
-    title: 'Smartphone independent',
+    title: 'Smartphone Independent',
     description: 'Operates as a self-contained system, reducing dependency on external devices or apps.',
   },
 ];
+
+const SPEC_LIST = [
+  { label: 'Sensor Type', value: 'Depth Camera (Stereo / ToF — whichever you use)' },
+  { label: 'Detection Range', value: '0.5 m – 3 m' },
+  { label: 'Field of View', value: '70°–90°' },
+  { label: 'Latency', value: '< 200 ms' },
+  { label: 'Connectivity', value: 'Bluetooth' },
+  { label: 'Battery Life', value: '4–6 hours' },
+  { label: 'Charging', value: 'USB‑C / Micro USB' },
+  { label: 'Weight', value: '< 300g total' },
+  { label: 'Water Resistance', value: 'Splash / rain resistant' },
+];
+
+function renderSpecIcon(label) {
+  const common = { width: 28, height: 28, viewBox: '0 0 24 24', fill: 'none', xmlns: 'http://www.w3.org/2000/svg' };
+  switch (label) {
+    case 'Sensor Type':
+      return (
+        <svg {...common}><path d="M12 7a5 5 0 100 10 5 5 0 000-10z" stroke="#67BAF4" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/><path d="M2 12h3" stroke="#67BAF4" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/><path d="M19 12h3" stroke="#67BAF4" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/></svg>
+      );
+    case 'Detection Range':
+      return (
+        <svg {...common}><path d="M3 12h18" stroke="#67BAF4" strokeWidth="1.4" strokeLinecap="round"/><path d="M6 9v6" stroke="#67BAF4" strokeWidth="1.4" strokeLinecap="round"/><path d="M18 9v6" stroke="#67BAF4" strokeWidth="1.4" strokeLinecap="round"/></svg>
+      );
+    case 'Field of View':
+      return (
+        <svg {...common}><path d="M2 12s4-8 10-8 10 8 10 8-4 8-10 8S2 12 2 12z" stroke="#67BAF4" strokeWidth="1.2" fill="none"/><circle cx="12" cy="12" r="2" fill="#67BAF4"/></svg>
+      );
+    case 'Latency':
+      return (
+        <svg {...common}><circle cx="12" cy="12" r="9" stroke="#67BAF4" strokeWidth="1.4" fill="none"/><path d="M12 7v6l4 2" stroke="#67BAF4" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/></svg>
+      );
+    case 'Connectivity':
+      return (
+        <svg {...common}><path d="M5 12c3-3 6-3 9 0" stroke="#67BAF4" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/><path d="M8 15c2-2 4-2 6 0" stroke="#67BAF4" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/><circle cx="12" cy="18" r="1" fill="#67BAF4"/></svg>
+      );
+    case 'Battery Life':
+      return (
+        <svg {...common}><rect x="2" y="7" width="16" height="10" rx="2" stroke="#67BAF4" strokeWidth="1.4" fill="none"/><rect x="18" y="10" width="2" height="4" rx="0.5" fill="#67BAF4"/></svg>
+      );
+    case 'Charging':
+      return (
+        <svg {...common}><path d="M11 6v6h4" stroke="#67BAF4" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/><path d="M2 12h3v6h12v-6h3" stroke="#67BAF4" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+      );
+    case 'Weight':
+      return (
+        <svg {...common}><path d="M6 20v-2a6 6 0 016-6h0a6 6 0 016 6v2" stroke="#67BAF4" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/><path d="M3 6h18" stroke="#67BAF4" strokeWidth="1.4" strokeLinecap="round"/></svg>
+      );
+    case 'Water Resistance':
+      return (
+        <svg {...common}><path d="M12 2s4 4 4 7a4 4 0 11-8 0c0-3 4-7 4-7z" stroke="#67BAF4" strokeWidth="1.4" fill="none" strokeLinecap="round" strokeLinejoin="round"/></svg>
+      );
+    default:
+      return null;
+  }
+}
+
+const featureCardVariants = {
+  hidden: { opacity: 0, y: 34 },
+  visible: (index) => ({
+    opacity: 1,
+    y: 0,
+    transition: {
+      duration: 0.55,
+      delay: index * 0.14,
+      ease: [0.22, 1, 0.36, 1],
+    },
+  }),
+};
+
+function VideoTestimonial() {
+  const videoRef = useRef(null);
+  const wrapperRef = useRef(null);
+  const [isPlaying, setIsPlaying] = useState(false);
+
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video) return;
+
+    const handleTimeUpdate = () => {
+      if (video.currentTime > 32) {
+        video.pause();
+        video.currentTime = 9;
+        setIsPlaying(false);
+      }
+    };
+
+    const handlePlay = () => {
+      if (video.currentTime < 9) {
+        video.currentTime = 9;
+      }
+      setIsPlaying(true);
+    };
+
+    const handlePause = () => {
+      setIsPlaying(false);
+    };
+
+    video.addEventListener('timeupdate', handleTimeUpdate);
+    video.addEventListener('play', handlePlay);
+    video.addEventListener('pause', handlePause);
+
+    return () => {
+      video.removeEventListener('timeupdate', handleTimeUpdate);
+      video.removeEventListener('play', handlePlay);
+      video.removeEventListener('pause', handlePause);
+    };
+  }, []);
+
+  useEffect(() => {
+    const section = wrapperRef.current;
+    const video = videoRef.current;
+
+    if (!section || !video) return undefined;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (!entry.isIntersecting && !video.paused) {
+            video.pause();
+          }
+        });
+      },
+      { threshold: 0.25 }
+    );
+
+    observer.observe(section);
+
+    return () => observer.disconnect();
+  }, []);
+
+  const handlePlayClick = () => {
+    const video = videoRef.current;
+    if (video) {
+      if (video.paused) {
+        if (video.currentTime < 9) {
+          video.currentTime = 9;
+        }
+        video.play();
+      } else {
+        video.pause();
+      }
+    }
+  };
+
+  return (
+    <div className="testimonial-wrapper" ref={wrapperRef}>
+      <div className="testimonial-video">
+        <video
+          ref={videoRef}
+          className="testimonial-video-element"
+          onLoadedMetadata={() => {
+            if (videoRef.current) videoRef.current.currentTime = 9;
+          }}
+        >
+          <source src={testimonialVideo} type="video/mp4" />
+          Your browser does not support the video tag.
+        </video>
+        {!isPlaying && (
+          <button className="video-play-button" onClick={handlePlayClick} aria-label="Play video">
+            ▶
+          </button>
+        )}
+      </div>
+      <div className="testimonial-quote">
+        <p className="testimonial-text">
+          "This helps our children travel independently—going to college, returning home, and even using public transport, which was previously very difficult."
+        </p>
+        <p className="testimonial-author">— Caregiver, Netraheen Kanya Vidyalaya, Jabalpur</p>
+      </div>
+    </div>
+  );
+}
 
 function App() {
   const [showModel, setShowModel] = useState(false);
@@ -151,16 +344,23 @@ function App() {
   useEffect(() => {
     const observer = new IntersectionObserver(
       (entries) => {
-        const visibleSections = entries
-          .filter((entry) => entry.isIntersecting)
-          .sort((left, right) => right.intersectionRatio - left.intersectionRatio);
-
-        if (visibleSections[0]) {
-          setActiveSection(visibleSections[0].target.id);
+        // Find the section with the highest intersection ratio
+        let highestRatio = 0;
+        let activeId = activeSection;
+        
+        entries.forEach((entry) => {
+          if (entry.isIntersecting && entry.intersectionRatio > highestRatio) {
+            highestRatio = entry.intersectionRatio;
+            activeId = entry.target.id;
+          }
+        });
+        
+        if (highestRatio > 0) {
+          setActiveSection(activeId);
         }
       },
       {
-        threshold: 0.6,
+        threshold: [0.1, 0.25, 0.5, 0.75],
       }
     );
 
@@ -186,18 +386,12 @@ function App() {
       {/* NAVIGATION BAR */}
       <nav className={`top-nav ${isPageReady ? 'is-ready' : 'is-loading'}`}>
         {SECTIONS.map((sec) => (
-          <button 
-            key={sec} 
+          <button
+            key={sec}
             className={`nav-link ${activeSection === sec ? 'active' : ''}`}
             onClick={() => scrollTo(sec)}
           >
-            {sec === 'main'
-              ? 'Home'
-              : sec === 'problem-statement'
-                ? 'Problem statement'
-                : sec === 'solution'
-                  ? 'Solution'
-                  : 'Key Features'}
+            {NAV_LABELS[sec] || sec}
           </button>
         ))}
       </nav>
@@ -216,6 +410,7 @@ function App() {
           Your browser does not support the video tag.
         </video>
 
+     
         {/* Dark overlay */}
         <div className="hero-overlay"></div>
         
@@ -224,13 +419,13 @@ function App() {
           <motion.div
             className="text-container"
             style={{ left: '50%' }}
-            initial={{ x: '-50%', opacity: 0, scale: 0.97 }}
+            initial={{ x: '-50%', opacity: 0, scale: 0.99 }}
             animate={{
               x: showModel ? '-42vw' : '-50%',
               opacity: showModel ? 1 : 0,
-              scale: showModel ? 1 : 0.97,
+              scale: showModel ? 1 : 0.99,
             }}
-            transition={{ duration: 3.4, delay: 0.25, ease: [0.16, 1, 0.3, 1] }}
+            transition={{ duration: 1.8, delay: 0.2, ease: 'easeInOut' }}
           >
             <div className="braille">
               ⠎⠑⠝⠎⠑⠽⠑
@@ -258,16 +453,54 @@ function App() {
             transition={{ duration: 1.5, delay: 1, ease: "easeOut" }}
           >
             {showModel && (
-              <Canvas shadows="percentage" dpr={[1, 2]} camera={{ position: [0, 0, 4], fov: 50 }}>
-                <Suspense fallback={null}>
-                  <Stage environment={null} intensity={0.6} adjustCamera={1.2}>
-                    <ShoeModel />
-                  </Stage>
-                </Suspense>
-                <CustomControls />
-              </Canvas>
+              <>
+                <Canvas frameloop="demand" dpr={1} camera={{ position: [0, 0, 4], fov: 50 }}>
+                  <KeepCanvasAlive />
+                  <Suspense fallback={null}>
+                    <Stage environment={null} intensity={0.6} adjustCamera={1.2}>
+                      <ShoeModel />
+                    </Stage>
+                  </Suspense>
+                  <CustomControls />
+                </Canvas>
+              </>
             )}
           </motion.div>
+        </div>
+      </section>
+
+        {/* PRICING */}
+        <section id="pricing" className={`content-section pricing-section ${isPageReady ? 'is-ready' : 'is-loading'}`}>
+          <div className="pricing-card">
+            <p className="pricing-kicker">Pricing</p>
+            <h2>Starting at ₹15,000 only</h2>
+            <p className="pricing-copy">
+              Invest in a safer, more independent tomorrow. 
+            </p>
+            <p className="pricing-copy">
+              Take the first step. <span className="order-now">Order now.</span>
+            </p>
+            
+          </div>
+        </section>
+
+         {/* SPECIFICATIONS */}
+      <section id="specs" className={`content-section specs-section ${isPageReady ? 'is-ready' : 'is-loading'}`}>
+        <div className="content-box specs-container">
+          <h2>Specifications</h2>
+          <div className="specs-grid">
+            {SPEC_LIST.map((s) => (
+              <div key={s.label} className="spec-item">
+                <div className="spec-icon" aria-hidden>
+                  {renderSpecIcon(s.label)}
+                </div>
+                <div className="spec-body">
+                  <div className="spec-label">{s.label}</div>
+                  <div className="spec-value">{s.value}</div>
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
       </section>
 
@@ -275,9 +508,9 @@ function App() {
       <section id="problem-statement" className={`content-section ${isPageReady ? 'is-ready' : 'is-loading'}`}>
         <div className="transparent-box flex-box">
           <div className="text-content" style={{ textAlign: 'center' }}>
-            <h2>Who we empower?</h2>
+            <h2>Who do we empower?</h2>
             <p>
-              More than 2.2 billion people worldwide live with vision impairment. Many still lack dependable, real-time awareness of the spaces around them, making safe and confident mobility unnecessarily difficult.
+              Over 2.2 billion people live with vision impairment worldwide, yet many still navigate without real-time awareness of their surroundings. This turns simple, everyday movement into a constant challenge.
             </p>
           </div>
           <div className="image-content">
@@ -285,6 +518,8 @@ function App() {
           </div>
         </div>
       </section>
+
+      
 
       {/* DESIGNED FOR INDEPENDENCE */}
       <section id="solution" className={`content-section ${isPageReady ? 'is-ready' : 'is-loading'}`} style={{ 
@@ -301,44 +536,18 @@ function App() {
         
         {/* Intro Text */}
         <div style={{ position: 'relative', zIndex: 1, padding: '1rem 4rem', textAlign: 'center' }}>
-          <h2 style={{ color: '#FAFAFA', marginBottom: '1.5rem', textShadow: '0 4px 10px rgba(0,0,0,0.5)' }}>Designed for independence</h2>
+          <h2 style={{ color: '#FAFAFA', marginBottom: '1.5rem', textShadow: '0 4px 10px rgba(0,0,0,0.5)' }}>
+            Designed for <span className="independence-word">independence</span>
+          </h2>
           <p style={{ fontSize: '1.3rem', maxWidth: '1200px', margin: '0 auto', lineHeight: '1.8', textShadow: '0 2px 5px rgba(0,0,0,0.5)' }}>
-            SENSEYE is a wearable navigation system that translates spatial information into intuitive haptic guidance. Using high-fidelity depth sensing and rapid onboard processing, it detects environmental obstacles and communicates direction through precise foot-based feedback, helping users move with greater confidence and independence.
-          </p>
+Senseye is a wearable navigation system that converts environmental information into intuitive haptic feedback. Using depth sensing, it detects obstacles in real time and communicates their direction through vibrations on the foot, enabling safer and more confident movement.          </p>
         </div>
 
-        {/* Slide 2: Foot Sleeve */}
+        {/* Slide 2: Belt Unit */}
         <div className="transparent-box flex-box" style={{ position: 'relative', zIndex: 1, minHeight: '50vh', gap: '2rem', alignItems: 'center' }}>
           <div className="image-content" style={{ height: '600px', width: '100%', flex: 1 }}>
-            <Canvas shadows="percentage" dpr={[1, 2]} camera={{ position: [0, 0, 4], fov: 50 }}>
-              <Suspense fallback={null}>
-                <Stage environment={null} intensity={0.6} adjustCamera={1.1}>
-                  <SleeveModel />
-                </Stage>
-              </Suspense>
-              <CustomControls />
-            </Canvas>
-          </div>
-          <div className="text-content" style={{ textAlign: 'center', flex: 1, textShadow: '0 2px 10px rgba(0,0,0,0.8)' }}>
-            <h3 className="subsection-title">Foot Sleeve</h3>
-            <h4 className="subsection-subtitle">Haptic Feedback Actuator</h4>
-            <p style={{ fontSize: '1.2rem', lineHeight: '1.6', margin: '0 auto', maxWidth: '600px' }}>
-              Engineered to deliver precise directional vibration, this module helps users interpret nearby obstacles quickly and navigate complex environments with confidence.
-            </p>
-          </div>
-        </div>
-
-        {/* Slide 3: Belt Unit */}
-        <div className="transparent-box flex-box" style={{ position: 'relative', zIndex: 1, minHeight: '50vh', gap: '2rem', alignItems: 'center' }}>
-          <div className="text-content" style={{ textAlign: 'center', flex: 1, textShadow: '0 2px 10px rgba(0,0,0,0.8)' }}>
-            <h3 className="subsection-title">Belt Unit</h3>
-            <h4 className="subsection-subtitle">Depth Sensing Module</h4>
-            <p style={{ fontSize: '1.2rem', lineHeight: '1.6', margin: '0 auto', maxWidth: '600px' }}>
-              Equipped with depth sensing and continuous processing, the belt tracks spatial topology in real time to identify the distance and direction of potential hazards.
-            </p>
-          </div>
-          <div className="image-content" style={{ height: '600px', width: '100%', flex: 1 }}>
-            <Canvas shadows="percentage" dpr={[1, 2]} camera={{ position: [0, 0, 4], fov: 50 }}>
+            <Canvas frameloop="demand" dpr={1} camera={{ position: [0, 0, 4], fov: 50 }}>
+              <KeepCanvasAlive />
               <Suspense fallback={null}>
                 <Stage environment={null} intensity={0.6} adjustCamera={1.3}>
                   <BeltModel />
@@ -347,23 +556,60 @@ function App() {
               <CustomControls />
             </Canvas>
           </div>
+          <div className="text-content" style={{ textAlign: 'center', flex: 1, textShadow: '0 2px 10px rgba(0,0,0,0.8)' }}>
+            <h3 className="subsection-title">Belt Unit</h3>
+            <h4 className="subsection-subtitle">The Eyes</h4>
+            <p style={{ fontSize: '1.2rem', lineHeight: '1.6', margin: '0 auto', maxWidth: '600px' }}>
+            Uses a depth camera and onboard computing to analyze real-time spatial data and identify obstacles based on direction and distance.            </p>
+          </div>
+        </div>
+
+        {/* Slide 3: Foot Sleeve */}
+        <div className="transparent-box flex-box" style={{ position: 'relative', zIndex: 1, minHeight: '50vh', gap: '2rem', alignItems: 'center' }}>
+          <div className="text-content" style={{ textAlign: 'center', flex: 1, textShadow: '0 2px 10px rgba(0,0,0,0.8)' }}>
+            <h3 className="subsection-title">Foot Sleeve</h3>
+            <h4 className="subsection-subtitle">The Guide</h4>
+            <p style={{ fontSize: '1.2rem', lineHeight: '1.6', margin: '0 auto', maxWidth: '600px' }}>
+              Receives signals via Wi-Fi and delivers directional vibrations through three actuators, enabling intuitive and responsive navigation.
+            </p>
+          </div>
+          <div className="image-content" style={{ height: '600px', width: '100%', flex: 1 }}>
+            <Canvas frameloop="demand" dpr={1} camera={{ position: [0, 0, 4], fov: 50 }}>
+              <KeepCanvasAlive />
+              <Suspense fallback={null}>
+                <Stage environment={null} intensity={0.6} adjustCamera={1.1}>
+                  <SleeveModel />
+                </Stage>
+              </Suspense>
+              <CustomControls />
+            </Canvas>
+          </div>
         </div>
 
       </section>
 
+      
       {/* KEY FEATURES */}
       <section id="features" className={`content-section ${isPageReady ? 'is-ready' : 'is-loading'}`}>
         <div className="content-box features-panel">
-          <h2>Key Features</h2>
+          <h2>Why choose us?</h2>
           <div className="feature-grid">
-            {FEATURE_CARDS.map((feature) => (
+            {FEATURE_CARDS.map((feature, index) => (
               <motion.article
                 key={feature.title}
                 className="feature-card"
-                whileHover={{ y: -6 }}
-                transition={{ duration: 0.25, ease: 'easeOut' }}
+                custom={index}
+                variants={featureCardVariants}
+                initial="hidden"
+                whileInView="visible"
+                viewport={{ once: true, amount: 0.3 }}
+                whileHover={{ scale: 1.02 }}
+                transition={{ duration: 0.2, ease: 'easeOut' }}
               >
                 <div className="feature-card-glow" />
+                <span className="feature-index">
+                  {String(index + 1).padStart(2, '0')}
+                </span>
                 <h3>{feature.title}</h3>
                 <p>{feature.description}</p>
               </motion.article>
@@ -371,6 +617,16 @@ function App() {
           </div>
         </div>
       </section>
+
+      
+
+      {/* USER TESTIMONIAL */}
+      <section id="testimonial" className={`content-section testimonial-section ${isPageReady ? 'is-ready' : 'is-loading'}`}>
+        <div className="content-box testimonial-content">
+          <VideoTestimonial />
+        </div>
+      </section>
+
     </div>
   );
 }
