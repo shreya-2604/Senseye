@@ -271,9 +271,9 @@ function VideoTestimonial() {
           </button>
         )}
       </div>
-      <div className="testimonial-quote">
+        <div className="testimonial-quote">
         <p className="testimonial-text">
-          "This helps our children travel independently—going to college, returning home, and even using public transport, which was previously very difficult."
+          This helps our children travel independently—going to college, returning home, and even using public transport, which was previously very difficult.
         </p>
         <p className="testimonial-author">— Caregiver, Netraheen Kanya Vidyalaya, Jabalpur</p>
       </div>
@@ -286,6 +286,7 @@ function App() {
   const [activeSection, setActiveSection] = useState('main');
   const [isPageReady, setIsPageReady] = useState(false);
   const heroVideoRef = useRef(null);
+  const sectionRatios = useRef({});
 
   // Intro animation: reveal model shortly after page is ready
   useEffect(() => {
@@ -367,31 +368,43 @@ function App() {
       }, []);
 
   useEffect(() => {
+    // Track per-section intersection ratios so we can always pick
+    // the most visible section as the active one (not just when it first intersects).
+    const ratios = sectionRatios.current;
+
     const observer = new IntersectionObserver(
       (entries) => {
-        // Find the section with the highest intersection ratio
-        let highestRatio = 0;
-        let activeId = activeSection;
-        
+        // Update stored ratios for changed entries
         entries.forEach((entry) => {
-          if (entry.isIntersecting && entry.intersectionRatio > highestRatio) {
-            highestRatio = entry.intersectionRatio;
-            activeId = entry.target.id;
+          ratios[entry.target.id] = entry.intersectionRatio;
+        });
+
+        // Pick the section with the largest ratio
+        let maxId = SECTIONS[0];
+        let maxRatio = 0;
+        SECTIONS.forEach((id) => {
+          const r = ratios[id] || 0;
+          if (r > maxRatio) {
+            maxRatio = r;
+            maxId = id;
           }
         });
-        
-        if (highestRatio > 0) {
-          setActiveSection(activeId);
+
+        // Only update when there's a visible section; this avoids flicker when scrolling between sections
+        if (maxRatio > 0.12) {
+          setActiveSection((prev) => (prev === maxId ? prev : maxId));
         }
       },
       {
-        threshold: [0.1, 0.25, 0.5, 0.75],
+        threshold: [0, 0.1, 0.25, 0.5, 0.75, 1],
       }
     );
 
     SECTIONS.forEach((sectionId) => {
       const element = document.getElementById(sectionId);
       if (element) {
+        // Initialize ratio to 0 to ensure consistent keys
+        ratios[sectionId] = ratios[sectionId] || 0;
         observer.observe(element);
       }
     });

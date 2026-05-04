@@ -7,6 +7,59 @@
   box-sizing: border-box;
 }
 
+/* Mobile: scroll-snap feature panels and tighter typography */
+@media (max-width: 640px) {
+  /* Make each feature card behave like a full-height slide */
+  .features-panel { width: 100%; }
+  .feature-grid {
+    display: block;
+    height: calc(100vh - 120px);
+    overflow-y: auto;
+    scroll-snap-type: y mandatory;
+    -webkit-overflow-scrolling: touch;
+    padding: 1rem 0;
+    gap: 0;
+  }
+
+  .feature-card {
+    width: min(92%, 420px);
+    margin: 0 auto 0.75rem;
+    height: calc(100vh - 160px);
+    scroll-snap-align: start;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 1.8rem;
+    box-sizing: border-box;
+  }
+
+  .feature-card + .feature-card { margin-top: 0.4rem; }
+
+  .feature-index { top: 0.9rem; left: 0.9rem; font-size: 1.6rem; }
+
+  .feature-card h3 { font-size: 1.15rem; }
+  .feature-card p { font-size: 1rem; }
+
+  /* Specs: tighter lines and wrapping */
+  .spec-label, .spec-value { font-size: 0.9rem; }
+  .spec-item { padding: 0.5rem; }
+  .specs-grid { gap: 0.6rem; }
+
+  /* Headings smaller to fit mobile */
+  .content-section h2 { font-size: 1.8rem; }
+  .subsection-title { font-size: 1.6rem; }
+  .subsection-subtitle { font-size: 0.9rem; }
+
+  /* Logo and braille tighter */
+  .logo { font-size: clamp(2rem, 9.5vw, 4.2rem); }
+  .braille { font-size: clamp(0.95rem, 2.4vw, 1.4rem); letter-spacing: 0.7rem; }
+
+  /* Ensure images stack below text and do not overflow */
+  .image-content { width: 100%; }
+  .section-image { max-height: 220px; width: 100%; object-fit: cover; }
+}
+
 body {
   /* Using Neue Haas Grotesk with fallbacks */
   font-family: 'Neue Haas Grotesk Display Pro', 'Neue Haas Grotesk', 'Helvetica Neue', Helvetica, Arial, sans-serif;
@@ -337,6 +390,126 @@ body {
 }
 @media (max-width: 640px) {
   .specs-grid { grid-template-columns: 1fr; }
+}
+
+/* Mobile adjustments to improve performance and layout */
+@media (max-width: 640px) {
+  /* Hide the heavy 3D canvas on small screens to save GPU and bandwidth */
+  .canvas-container {
+    display: none;
+  }
+
+  /* Center main hero text and make it occupy full width */
+  .text-container {
+    position: relative;
+    left: 0 !important;
+    transform: none !important;
+    width: 100%;
+    padding: 0 1.25rem;
+    text-align: center;
+    pointer-events: none;
+  }
+
+  .logo {
+    font-size: clamp(3rem, 12vw, 6.5rem);
+    letter-spacing: 0.06rem;
+    white-space: normal;
+  }
+
+  .braille {
+    font-size: clamp(1.2rem, 3vw, 2rem);
+    letter-spacing: 0.9rem;
+    margin-bottom: -0.5rem;
+  }
+
+  .hero-subtitle {
+    font-size: 1.05rem;
+    letter-spacing: 0.28rem;
+    margin-top: 0.6rem;
+  }
+
+  .top-nav {
+    padding: 1rem 1rem;
+    justify-content: center;
+    gap: 0.6rem;
+  }
+
+  .nav-link {
+    font-size: 0.78rem;
+    padding: 0.35rem 0.5rem;
+    opacity: 0.85;
+  }
+
+  .content-section {
+    padding: 2rem 1rem;
+  }
+
+  .content-box {
+    padding: 1.5rem;
+  }
+
+  .feature-grid { grid-template-columns: 1fr; }
+
+  .feature-card { padding: 2rem 1rem; min-height: 220px; }
+
+  .section-image { max-height: 260px; }
+
+  /* Make hero video lighter: reduce decode area and ensure cover */
+  .hero-video { will-change: transform; filter: contrast(1.1) saturate(1.02) brightness(0.95); }
+}
+
+/* Additional mobile refinements */
+@media (max-width: 640px) {
+  /* Make the nav act like a stacked list */
+  .top-nav {
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 0.75rem;
+    background: linear-gradient(to bottom, rgba(10,10,10,0.92) 0%, rgba(10,10,10,0.85) 100%);
+    pointer-events: auto;
+    backdrop-filter: none;
+  }
+
+  .nav-link {
+    display: block;
+    width: min(92%, 340px);
+    text-align: center;
+    padding: 0.45rem 0.6rem;
+    border-radius: 8px;
+    background: rgba(255,255,255,0.02);
+    opacity: 0.95;
+    font-size: 0.86rem;
+  }
+
+  /* Prevent the fixed nav from overlapping content */
+  .app-container {
+    padding-top: 64px; /* approximate nav height */
+  }
+
+  /* Scale down large headings to fit mobile */
+  .content-section h2 {
+    font-size: 2.2rem;
+    margin-bottom: 1rem;
+  }
+
+  .subsection-title { font-size: 2rem; }
+  .subsection-subtitle { font-size: 0.95rem; }
+
+  /* Ensure images appear below text on stacked layouts */
+  .text-content { order: 1; }
+  .image-content { order: 2; }
+
+  /* Reduce hero text sizes further if needed */
+  .logo { font-size: clamp(2.6rem, 11vw, 5.2rem); }
+  .braille { font-size: clamp(1rem, 2.6vw, 1.6rem); }
+
+  /* Make feature headings smaller */
+  .feature-card h3 { font-size: 1.15rem; }
+
+  /* Tighten spacing throughout */
+  .hero-content { padding: 0 0.5rem; }
+  .content-section { padding: 1.5rem 0.75rem; }
 }
 
 .transparent-box {
@@ -677,6 +850,19 @@ body {
   line-height: 1;
 }
 
+.testimonial-text::after {
+  /* Decorative closing quote placed bottom-right */
+  content: '"';
+  position: absolute;
+  right: 0.25rem;
+  bottom: -0.6rem;
+  font-size: 2.4rem;
+  color: rgba(103, 186, 244, 0.22);
+  line-height: 1;
+  transform: translateY(0%);
+  pointer-events: none;
+}
+
 .testimonial-author {
   font-size: 1.05rem;
   color: rgba(250, 250, 250, 0.75);
@@ -721,6 +907,13 @@ body {
 
   .testimonial-text::before {
     font-size: 2.2rem;
+  }
+
+  .testimonial-text::after {
+    right: 0.6rem;
+    bottom: -0.45rem;
+    font-size: 1.9rem;
+    color: rgba(103, 186, 244, 0.18);
   }
 
   .video-play-button {
