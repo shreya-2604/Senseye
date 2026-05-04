@@ -109,7 +109,7 @@ const FEATURE_CARDS = [
 ];
 
 const SPEC_LIST = [
-  { label: 'Sensor Type', value: 'Depth Camera (Stereo / ToF — whichever you use)' },
+  { label: 'Sensor Type', value: 'Stereo vision - OakdLite 13 MP' },
   { label: 'Detection Range', value: '0.5 m – 3 m' },
   { label: 'Field of View', value: '70°–90°' },
   { label: 'Latency', value: '< 200 ms' },
