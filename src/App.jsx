@@ -96,7 +96,7 @@ const FEATURE_CARDS = [
   },
   {
     title: 'Hands-free modular design',
-    description: 'A wearable architecture that keeps the user unencumbered while adapting to daily routines.',
+    description: 'A wearable architecture that keeps the users hands free while adapting to daily routines.',
   },
   {
     title: 'Real-time Processing',
@@ -104,19 +104,19 @@ const FEATURE_CARDS = [
   },
   {
     title: 'Smartphone Independent',
-    description: 'Operates as a self-contained system, reducing dependency on external devices or apps.',
+    description: 'Operates as a self-contained system, reducing dependency on external devices or the internet.',
   },
 ];
 
 const SPEC_LIST = [
   { label: 'Sensor Type', value: 'Stereo vision - OakdLite 13 MP' },
-  { label: 'Detection Range', value: '0.5 m – 3 m' },
+  { label: 'Detection Range', value: '0.2 m – 1 m' },
   { label: 'Field of View', value: '70°–90°' },
   { label: 'Latency', value: '< 200 ms' },
   { label: 'Connectivity', value: 'Wi-fi' },
-  { label: 'Battery Life', value: '4–6 hours' },
-  { label: 'Charging', value: 'USB‑C / Micro USB' },
-  { label: 'Weight', value: '< 300g total' },
+  { label: 'Battery Life', value: '6–8 hours' },
+  { label: 'Charging', value: 'USB‑C' },
+  { label: 'Weight', value: '< 500g total' },
   { label: 'Water Resistance', value: 'Splash / rain resistant' },
 ];
 
