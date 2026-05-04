@@ -113,7 +113,7 @@ const SPEC_LIST = [
   { label: 'Detection Range', value: '0.5 m – 3 m' },
   { label: 'Field of View', value: '70°–90°' },
   { label: 'Latency', value: '< 200 ms' },
-  { label: 'Connectivity', value: 'Bluetooth' },
+  { label: 'Connectivity', value: 'Wi-fi' },
   { label: 'Battery Life', value: '4–6 hours' },
   { label: 'Charging', value: 'USB‑C / Micro USB' },
   { label: 'Weight', value: '< 300g total' },
