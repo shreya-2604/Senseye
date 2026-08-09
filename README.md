@@ -1,5 +1,7 @@
 # Senseye
 
+Live demo: https://senseye-rho.vercel.app/
+
 Senseye is a college innovation project aimed at creating a wearable assistive solution for visually impaired individuals. The concept combines a foot-based and belt-based wearable system with real-time environmental sensing to help users navigate more safely and independently.
 
 This repository contains an interactive portfolio website that showcases the product concept, its purpose, key features, and technical specifications in a visually engaging way.
